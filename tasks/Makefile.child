@@ -33,13 +33,22 @@ $(1)/init: $(1)/validate $(1)/clean
 $(1)/shell:
 	$$(DOCKER_RUN) --name=$(1) -v $(HOME):/localhost $(1) -l
 
+## Show terraform plans
+$(1)/plan:
+	$$(DOCKER_RUN) --name=$(1) \
+		$(1) -l -c "/scripts/provision.sh --import-env --assume-role --plan-modules"
+
 ## Provision resources in the "child" account
 $(1)/provision:
-	$$(DOCKER_RUN) --name=$(1) -e SKIP_MODULES="^(cloudtrail|backing-services|kops-aws-platform)$$$$" $(1) -l -c "/scripts/provision.sh --import-env --assume-role --apply-modules"
+	# $$(DOCKER_RUN) --name=$(1) \
+		-e SKIP_MODULES="^(cloudtrail|backing-services|kops-aws-platform)$$$$" \
+		$(1) -l -c "/scripts/provision.sh --import-env --assume-role --apply-modules"
 
 ## Finalize all account configuration
 $(1)/finalize:
-	$$(DOCKER_RUN) --name=$(1) -e SKIP_MODULES="^(backing-services|kops-aws-platform)$$$$" $(1) -l -c "/scripts/provision.sh --import-env --assume-role --apply-modules"
+	$$(DOCKER_RUN) --name=$(1) \
+		-e SKIP_MODULES="^(backing-services|kops-aws-platform)$$$$" \
+		$(1) -l -c "/scripts/provision.sh --import-env --assume-role --apply-modules"
 
 ## Kill the container
 $(1)/kill:

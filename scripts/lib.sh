@@ -2,21 +2,32 @@
 
 export CONF="${CONF:-/conf}"
 
-# Import env for this stage
-function import_env() {
-	# Load the environment for this stage, if they exist
-	echo "Loading /artifacts/${STAGE}.env"
-	source /artifacts/${STAGE}.env
-
-	# Export our environment to TF_VARs
-	eval $(tfenv sh -c "export -p")
+function abort() {
+	echo -e "\n\n"
+	echo "==============================================================================================="
+	echo "$1"
+	echo
+	echo "* Please report this error here:"
+	echo "          https://github.com/cloudposse/reference-architectures/issues/new"
+	echo -e "\n\n"
+	exit 1
 }
 
-function disable_profile() {
-	# Don't use a role to simplify provisioning of root account
-	export TF_VAR_aws_assume_role_arn=""
-	unset AWS_DEFAULT_PROFILE
-	unset AWS_PROFILE
+# Provision modules
+function apply_modules() {
+	# Provision modules which *do not* have dependencies on other accounts (that will be a later phase)
+	for module in ${TERRAFORM_ROOT_MODULES}; do 
+		if [[ -n "${SKIP_MODULES}" ]] && [[ "${module}" =~ ${SKIP_MODULES} ]]; then
+			echo "Skipping ${module}..."
+		else
+			echo "Processing $module..."
+			direnv exec "/conf/${module}" make -C "/conf/${module}" deps
+			direnv exec "/conf/${module}" make -C "/conf/${module}" apply
+			if [ $? -ne 0 ]; then
+				abort "The ${module} module errored. Aborting."
+			fi
+		fi
+	done
 }
 
 # Easily assume role using the "bootstrap" user
@@ -53,6 +64,13 @@ function assume_role() {
 	fi
 }
 
+# Don't use a role to simplify provisioning of root account
+function disable_profile() {
+	export TF_VAR_aws_assume_role_arn=""
+	unset AWS_DEFAULT_PROFILE
+	unset AWS_PROFILE
+}
+
 # Export map of accounts
 function export_accounts() {
 	# Export account ids (for use with provisioning children)
@@ -65,19 +83,18 @@ function export_accounts() {
 	) | terraform fmt - > /artifacts/accounts.tfvars
 }
 
-function abort() {
-	echo -e "\n\n"
-	echo "==============================================================================================="
-	echo "$1"
-	echo
-	echo "* Please report this error here:"
-	echo "          https://github.com/cloudposse/reference-architectures/issues/new"
-	echo -e "\n\n"
-	exit 1
+# Import env for this stage
+function import_env() {
+	# Load the environment for this stage, if they exist
+	echo "Loading /artifacts/${STAGE}.env"
+	source /artifacts/${STAGE}.env
+
+	# Export our environment to TF_VARs
+	eval $(tfenv sh -c "export -p")
 }
 
-# Provision modules
-function apply_modules() {
+# Plan modules
+function plan_modules() {
 	# Provision modules which *do not* have dependencies on other accounts (that will be a later phase)
 	for module in ${TERRAFORM_ROOT_MODULES}; do 
 		if [[ -n "${SKIP_MODULES}" ]] && [[ "${module}" =~ ${SKIP_MODULES} ]]; then
@@ -85,7 +102,7 @@ function apply_modules() {
 		else
 			echo "Processing $module..."
 			direnv exec "/conf/${module}" make -C "/conf/${module}" deps
-			direnv exec "/conf/${module}" make -C "/conf/${module}" apply
+			direnv exec "/conf/${module}" make -C "/conf/${module}" plan
 			if [ $? -ne 0 ]; then
 				abort "The ${module} module errored. Aborting."
 			fi
@@ -107,6 +124,10 @@ function parse_args() {
 			;;
 		-m | --apply-modules)
 			apply_modules
+			shift
+			;;
+		-p | --plan-modules)
+			plan_modules
 			shift
 			;;
 		-i | --import-env)

@@ -34,7 +34,7 @@ templates = [
 # List of terraform root modules to enable
 terraform_root_modules = [
   "aws/tfstate-backend",
-  "aws/account-dns",
+  # "aws/account-dns",
   "aws/chamber",
   "aws/audit-cloudtrail",
 ]

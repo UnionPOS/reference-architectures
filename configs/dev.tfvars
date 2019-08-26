@@ -29,12 +29,24 @@ templates = [
   "conf/cloudtrail/.envrc",
   "conf/cloudtrail/Makefile.tasks",
   "conf/cloudtrail/terraform.envrc",
+  "conf/kops/.envrc",
+  "conf/kops/Makefile.tasks",
+  "conf/kops/kops.envrc",
+  "conf/kops/terraform.envrc",
+  "conf/kops/terraform.tfvars",
+  "docs/kops.md",
+  "conf/kops-aws-platform/.envrc",
+  "conf/kops-aws-platform/Makefile.tasks",
+  "conf/kops-aws-platform/terraform.envrc",
+  "conf/kops-aws-platform/terraform.tfvars",
 ]
 
 # List of terraform root modules to enable
 terraform_root_modules = [
   "aws/tfstate-backend",
-  "aws/account-dns",
+  # "aws/account-dns",
   "aws/chamber",
+  # "aws/kops",
+  # "aws/kops-aws-platform",
   "aws/cloudtrail",
 ]

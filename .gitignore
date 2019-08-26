@@ -1,11 +1,19 @@
+# ignore direnv artifacts
 /.envrc
-.build-harness
-build-harness
-/repos/
+
+# ignore build harness
+*build-harness
+
+# ignore account artifacts
 /accounts/
+
+# ignore generation artifacts
 /artifacts/
+
+# ignore generated account repos
+/repos/
+
+# ignore terraform artifacts
 .terraform
 *.tfstate
 *.tfstate.backup
-.idea
-*.iml

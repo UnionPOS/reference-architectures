@@ -1,6 +1,7 @@
 # Kops (Kubernetes Operations)
 
 ## Table of Contents
+
 - [Kops (Kubernetes Operations)](#kops-kubernetes-operations)
   - [Table of Contents](#table-of-contents)
   - [Configuration Settings](#configuration-settings)
@@ -46,16 +47,16 @@ Most configuration settings are defined as environment variables.  These have be
 
 **IMPORTANT:**
 
-1.  `KOPS_NETWORK_CIDR` and `KOPS_NON_MASQUERADE_CIDR` **MUST NOT** overlap
-2.  `KOPS_KUBE_API_SERVER_AUTHORIZATION_MODE` is a comma-separated list (e.g.`AlwaysAllow`,`AlwaysDeny`,`ABAC`,`Webhook`,`RBAC`,`Node`)
+1. `KOPS_NETWORK_CIDR` and `KOPS_NON_MASQUERADE_CIDR` **MUST NOT** overlap
+1. `KOPS_KUBE_API_SERVER_AUTHORIZATION_MODE` is a comma-separated list (e.g.`AlwaysAllow`,`AlwaysDeny`,`ABAC`,`Webhook`,`RBAC`,`Node`)
 
 </details>
 
 There are (3) was to set environment variables.
 
 1. Set them in the [`Dockerfile`](../Dockerfile). This is not recommended as they are global in scope.
-2. Set them in `chamber`. This requires an AWS session and access to KMS + Parameter Store.
-3. Set them in the `.envrc`. This is suitable for most values. Just to put any secrets in there.
+1. Set them in `chamber`. This requires an AWS session and access to KMS + Parameter Store.
+1. Set them in the `.envrc`. This is suitable for most values. Just to put any secrets in there.
 
 ## Provision a Kops Cluster
 
@@ -67,14 +68,14 @@ and is compiled by running `build-kops-manifest` either in the [`Dockerfile`](Do
 Provisioning a `kops` cluster takes three steps:
 
 1. Update the the [environment settings](#configuration-settings) and rebuild/restart the `geodesic` shell.
-2. Provision the `kops` backend (config S3 bucket, cluster DNS zone, and SSH keypair to access the k8s masters and nodes) in Terraform.
-3. Build the cluster from the manifest file using the `kops` command.
+1. Provision the `kops` backend (config S3 bucket, cluster DNS zone, and SSH keypair to access the k8s masters and nodes) in Terraform.
+1. Build the cluster from the manifest file using the `kops` command.
 
 Let's get started...
 
 ### Step 1 - Configuration
 
-Tune the cluster settings by adding them to the `conf/kops/.envrc` file. Make sure you commit this file. 
+Tune the cluster settings by adding them to the `conf/kops/.envrc` file. Make sure you commit this file.
 
 Here's an example of what that might look like:
 
@@ -96,7 +97,6 @@ make docker/build
 ### Step 2 - Provision AWS Dependencies
 
 Kops depends on a number of AWS resources that cannot be provisioned by `kops` itself. For this reason, we use `terraform` to provision those resources.
-
 
 Run the `geodesic` shell again and assume role to login to AWS:
 
@@ -134,7 +134,7 @@ make kops/build-manifest
 
 You will see the `kops` manifest file `manifest.yaml` has been generated. Inspect the manifest to ensure everything looks good.
 
-Then run this command to write the state to the S3 state storage bucket. This won't actually bring up the cluster. 
+Then run this command to write the state to the S3 state storage bucket. This won't actually bring up the cluster.
 
 ```bash
 make kops/create
@@ -179,7 +179,7 @@ kops validate cluster
 
 Below is an example of what it should _roughly_ look like (IPs and Availability Zones may differ).
 
-```
+```console
 ✓   (${namespace}-${stage}-admin) kops ⨠  kops validate cluster
 Validating cluster ${aws_region}.${image_name}
 
@@ -215,7 +215,7 @@ kubectl get nodes
 
 Below is an example of what it should _roughly_ look like (IPs and Availability Zones may differ).
 
-```
+```console
 ✓   (${namespace}-${stage}-admin) kops ⨠  kubectl get nodes
 NAME                                                STATUS   ROLES    AGE   VERSION
 ip-172-20-108-58.${aws_region}.compute.internal    Ready    node     15m   v1.10.8
@@ -238,7 +238,7 @@ kubectl get pods --all-namespaces
 
 Below is an example of what it should _roughly_ look like (IPs and Availability Zones may differ).
 
-```
+```console
 ✓   (${namespace}-${stage}-admin) backing-services ⨠  kubectl get pods --all-namespaces
 NAMESPACE     NAME                                                                        READY   STATUS    RESTARTS   AGE
 kube-system   calico-kube-controllers-69c6bdf999-7sfdg                                    1/1     Running   0          1h
@@ -280,24 +280,23 @@ kube-system   kube-scheduler-ip-172-20-74-158.${aws_region}.compute.internal    
 To upgrade the cluster or change settings (_e.g_. number of nodes, instance types, Kubernetes version, etc.):
 
 1. Modify the `kops` settings in the [`Dockerfile`](Dockerfile)
-2. Rebuild Docker image (`make docker/build`)
-3. Run `geodesic` shell (`${image_name}`), assume role (`assume-role`) and change directory to `/conf/kops` folder
-4. Run `kops export kubecfg`
-5. Run `kops replace -f manifest.yaml` to replace the cluster resources (update state)
-6. Run `kops update cluster`
-7. Run `kops update cluster --yes`
-8. Run `kops rolling-update cluster`
-9. Run `kops rolling-update cluster --yes --force` to force a rolling update (replace EC2 instances)
-   <br>
-
+1. Rebuild Docker image (`make docker/build`)
+1. Run `geodesic` shell (`${image_name}`), assume role (`assume-role`) and change directory to `/conf/kops` folder
+1. Run `kops export kubecfg`
+1. Run `kops replace -f manifest.yaml` to replace the cluster resources (update state)
+1. Run `kops update cluster`
+1. Run `kops update cluster --yes`
+1. Run `kops rolling-update cluster`
+1. Run `kops rolling-update cluster --yes --force` to force a rolling update (replace EC2 instances)
+<br>
 
 ## References
 
-- https://docs.cloudposse.com
-- https://github.com/segmentio/chamber
-- https://github.com/kubernetes/kops
-- https://github.com/kubernetes-incubator/external-dns/blob/master/docs/faq.md
-- https://github.com/gravitational/workshop/blob/master/k8sprod.md
+- `https://docs.cloudposse.com`
+- `https://github.com/segmentio/chamber`
+- `https://github.com/kubernetes/kops`
+- `https://github.com/kubernetes-incubator/external-dns/blob/master/docs/faq.md`
+- `https://github.com/gravitational/workshop/blob/master/k8sprod.md`
 
 ## Getting Help
 

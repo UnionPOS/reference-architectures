@@ -1,10 +1,10 @@
 # This is a terraform configuration file
 
 # The "apex" service discovery domain for *all* infrastructure
-domain = "test.co"
+domain = "union-pos.net"
 
 # The global namespace that should be shared by all accounts
-namespace = "test"
+namespace = "up"
 
 # The default region for this account
 aws_region = "us-west-2"
@@ -12,7 +12,7 @@ aws_region = "us-west-2"
 # Network CIDR of Organization
 org_network_cidr    = "10.0.0.0/8"
 org_network_offset  = 100
-org_network_newbits = 8    # /8 + /8 = /16
+org_network_newbits = 8 # /8 + /8 = /16
 
 # Pod IP address space (must not overlap with org_network_cidr)
 # 100.64.0.0/10 is the default used by kops, even though it is technically reserved for carrier-grade NAT
@@ -21,9 +21,9 @@ kops_non_masquerade_cidr = "100.64.0.0/10"
 
 
 # The docker registry that will be used for the images built (nothing will get pushed)
-docker_registry = "cloudposse"
+docker_registry = "unionpos"
 
-# The templates to use for this account
+# define the list of templates which will be included in the geodesic image
 templates = [
   "README.md",
   "Dockerfile.root",
@@ -72,7 +72,7 @@ templates = [
 ]
 
 # Account email address format (e.g. `ops+%s@example.co`). This is not easily changed later.
-account_email = "ops+%s@test.co"
+account_email = "devops+%s@union-pos.com"
 
 # List of accounts to enable
 accounts_enabled = [
@@ -80,27 +80,29 @@ accounts_enabled = [
   "staging",
   "prod",
   "testing",
-  "data",
+  # "data",
   "corp",
   "audit",
+  "security",
+  "identity",
 ]
 
 # Administrator IAM usernames mapped to their keybase usernames for password encryption
 users = {
-#  "erik@cloudposse.com" = "osterman"
+  "russell@union-pos.com" = "russellunionpos"
 }
 
 # Geodesic Base Image (don't change this unless you know what you're doing)
 # Project: https://github.com/cloudposse/geodesic
 geodesic_base_image = "cloudposse/geodesic:0.115.0"
 
-# List of terraform root modules to enable
+# List of terraform root modules to apply during provisioning
 terraform_root_modules = [
   "aws/tfstate-backend",
   "aws/accounts",
   "aws/account-settings",
   "aws/bootstrap",
-  "aws/root-dns",
+  # "aws/root-dns",
   "aws/root-iam",
   "aws/iam",
   "aws/users",

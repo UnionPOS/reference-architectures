@@ -1,6 +1,6 @@
 # This is a terraform configuration file
 
-stage = "staging"
+stage = "identity"
 
 # List of templates to install
 templates = [

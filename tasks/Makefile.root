@@ -2,10 +2,17 @@
 root/clean:
 	rm -rf root.tfstate root.tfstate.backup accounts/root
 
-## Initialize the "root" AWS account
+## get the aws account id for the root account
+root/preinit:
+	$(DOCKER_RUN) cloudposse/geodesic:0.115.0 -c /scripts/get-root-account-id.sh
+
+## Initialize the root AWS account
 root/init: root/clean
-	$(DOCKER_RUN) cloudposse/geodesic:0.96.0 -c /scripts/get-root-account-id.sh
 	terraform init -from-module=modules/root accounts/root
+
+# The apply target can sometimes fail due to a race condition it can be run again
+# and should pick up where it left off
+root/apply:
 	terraform apply \
 		-var-file=artifacts/aws.tfvars \
 		-var-file=$(CONFIGS)/root.tfvars \
@@ -14,29 +21,37 @@ root/init: root/clean
 		accounts/root
 	terraform output -state=root.tfstate docker_image > artifacts/root-docker-image
 
-# The init recipe can sometimes fail due to a race condition, in which case init-resume will
-# try to pick up where it left of. This is for manual use only.
-root/init-resume:
-	terraform apply \
-		-var-file=artifacts/aws.tfvars \
-		-var-file=$(CONFIGS)/root.tfvars \
-		-auto-approve \
-		-state=root.tfstate \
-		accounts/root
-	terraform output -state=root.tfstate docker_image > artifacts/root-docker-image
+## show terraform plan output
+root/plan:
+	$(DOCKER_RUN) --name=root \
+		root -l -c "/scripts/provision.sh \
+			--import-env \
+			--disable-profile \
+			--plan-modules"
 
 ## Provision resources in the "root" account
 root/provision:
-	$(DOCKER_RUN) --name=root -e SKIP_MODULES="^(root-dns|cloudtrail)$$" root -l -c "/scripts/provision.sh --import-env --disable-profile --apply-modules --export-accounts"
+	$(DOCKER_RUN) --name=root \
+		-e SKIP_MODULES="^(root-dns|cloudtrail)$$" \
+		root -l -c "/scripts/provision.sh \
+			--import-env \
+			--disable-profile \
+			--apply-modules \
+			--export-accounts"
 
 ## Finalize the configuration of the AWS "root" account (depends on root/init, root/provision, and children)
 root/finalize:
-	$(DOCKER_RUN) --name=root root -l -c "/scripts/provision.sh --import-env --assume-role --apply-modules"
+	$(DOCKER_RUN) --name=root \
+		root -l -c "/scripts/provision.sh \
+			--import-env \
+			--assume-role \
+			--apply-modules"
 
 ## Start a shell in the "root" container (depends on root/init)
 root/shell:
-	$(DOCKER_RUN) --name=root -v $(HOME):/localhost root -l
+	$(DOCKER_RUN) --name=root \
+		-v $(HOME):/localhost root -l
 
 ## Provision "root" account
-root: root/init root/provision
+root: root/preinit root/init root/apply root/provision
 	@exit 0
