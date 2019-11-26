@@ -8,7 +8,7 @@ This repository provides all the tooling to manage the `${stage}` account infras
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | AWS Account ID | ${aws_account_id}                                                                                                             |
 | Account Email  | ${account_email_address}                                                                                                      |
-| Login URL      | <https://signin.aws.amazon.com/switchrole?account=${aws_account_id}&roleName=OrganizationAccountAccessRole&displayName=${namespace}-${stage}-admin> |
+| Login URL      | <https://signin.aws.amazon.com/switchrole?account=${aws_account_id}&roleName=${namespace}-${stage}-administrator&displayName=${namespace}-${stage}-admin> |
 | Namespace      | ${namespace}                                                                                                                  |
 | Stage          | ${stage}                                                                                                                      |
 | Default Region | ${aws_region}                                                                                                                 |
@@ -93,8 +93,6 @@ Most configuration settings are defined as environment variables. These can be s
 | AWS_DEFAULT_PROFILE   | AWS Profile that will be used by `aws-vault` to assume roles.                 |
 | CHAMBER_KMS_KEY_ALIAS | Default KMS key that will be used to encrypt secrets for chamber.             |
 
-**NOTE:** You can use [`tfenv`](https://github.com/cloudposse/tfenv) to easily pass environment variables to terraform.
-
 </details>
 
 ## Prerequisites
@@ -108,15 +106,11 @@ Most configuration settings are defined as environment variables. These can be s
 
 Here's how to get started with this repository.
 
-<details>
-<summary>Basic Operating Instructions</summary>
-
 ### Initialize the Project
 
 First, let's initialize the [`build-harness`](https://github.com/cloudposse/build-harness). You only need to do this once per `git clone` of this repository.
 
-```bash
-# Initialize the project's build-harness
+```sh
 make init
 ```
 
@@ -124,7 +118,7 @@ make init
 
 Build the docker image we'll use for local development, to provision infrastructure or to administer AWS.
 
-```bash
+```sh
 make docker/build
 ```
 
@@ -132,7 +126,7 @@ make docker/build
 
 Install the helper script which makes it easier to start the docker container. You only really need to do this once.
 
-```bash
+```sh
 make install
 ```
 
@@ -140,7 +134,7 @@ make install
 
 Anytime you want to interact with tools like terraform, chamber, etc we recommend you do so from within the shell.
 
-```bash
+```sh
 /usr/local/bin/${image_name}
 ```
 
@@ -155,7 +149,7 @@ Configure your AWS profile in `~/.aws/config` by running `aws-config-setup` insi
 
 **NOTE:** You only need to do this once per AWS account.
 
-```bash
+```sh
 aws-config-setup
 ```
 
@@ -165,8 +159,8 @@ _([inside the shell](#run-the-shell))_
 
 Run this command anytime you start a new shell and need to operate on AWS:
 
-```bash
-assume-role
+```sh
+assume
 ```
 
 ## Using Terraform
@@ -177,7 +171,7 @@ _([inside the shell](#run-the-shell))_
 
 You need to do it only once per account during the cold-start.
 
-```bash
+```sh
 make -C /conf/tfstate-backend init
 ```
 
@@ -185,15 +179,9 @@ After `tfstate-backend` has been provisioned, you can just run `init-terraform` 
 
 For more info, see [Using Geodesic with Terraform](https://docs.cloudposse.com/geodesic/module/with-terraform/)
 
-</details>
-
 ## References
 
 - https://docs.cloudposse.com
-- https://github.com/cloudposse/geodesic
-- https://github.com/cloudposse/packages
-- https://github.com/cloudposse/build-harness
-
-## Getting Help
-
-Did you get stuck? Find us on [slack](https://slack.cloudposse.com) in the `#geodesic` channel.
+- https://github.com/UnionPOS/geodesic
+- https://github.com/UnionPOS/packages
+- https://github.com/UnionPOS/build-harness
